@@ -103,7 +103,6 @@
     </div>
 
     <div class="actions">
-      <button id="calc">Calculate</button>
       <button id="swap">Swap points</button>
       <button id="reset">Reset defaults</button>
     </div>
@@ -114,8 +113,8 @@
 
   <script>
     const defaults = {
-      a1: -77, o1: 1648, dc1: 1736000,
-      a2: 112, o2: 50,   dc2: 1734000
+      a1: 0, o1: 0, dc1: 0,
+      a2: 0, o2: 0,   dc2: 0
     };
 
     const el = (id) => document.getElementById(id);
@@ -157,8 +156,7 @@
       const dist = cylindricalDistance(p1, p2);
 
       el("out").textContent =
-        `Euclidean Distance: ${dist.toFixed(4)}\n` +
-        `a1(norm)=${a1}°, a2(norm)=${a2}°`;
+        `Distance (AU): ${dist.toFixed(4)}\n`
     }
 
     function resetDefaults() {
