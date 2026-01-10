@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Xeonic Time</title>
+
+  <link rel="stylesheet" href="https://xeonrapture.github.io/site.css">
+
+  <style>
+    .clock {
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: var(--panel, #161821);
+      border: 1px solid var(--border, #333);
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .real {
+      font-size: 1.2rem;
+      opacity: 0.8;
+      margin-bottom: 1rem;
+    }
+
+    .xeon {
+      font-size: 1.5rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .season {
+      margin-top: 0.5rem;
+      opacity: 0.75;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="nav"></div>
+  <script>
+    fetch("https://xeonrapture.github.io/nav.html")
+      .then(r => r.text())
+      .then(html => document.getElementById("nav").innerHTML = html)
+      .catch(() => {});
+  </script>
+
+  <main>
+    <div class="clock">
+      <div class="real" id="realTime">Loading…</div>
+      <div class="xeon" id="xeonTime">Loading…</div>
+      <div class="season" id="xeonSeason"></div>
+    </div>
+  </main>
+
+  <script>
+    // ===== Xeonic Calendar Data =====
+    const xeonMonths = [
+      "Uthalanai","Ulaganai","Zolanai",
+      "Reinanai","Iaianai","Vorashanai",
+      "Xozanai","Qolanai","Dodatanai",
+      "Ethinanai","Valkanai","Karoshanai"
+    ];
+    const xeonWeeks = ["Tenorah","Olinah","Bathah","Unah","Opothaiah"];
+    const xeonDays  = ["Boff","Corel","Estr","Frad","Othel","Nytr"];
+    const abaiahDays = ["Mona","Yoia","Goya","Olo","Baia","Vaia"];
+    const seasons = ["Spring","Summer","Fall","Winter"];
+
+    const EPOCH_OFFSET = 2025 - 1665;
+    const startOfXeonicYear = (y) => new Date(y, 2, 1); // March 1
+
+    function toXeonic(realDate) {
+      const year = realDate.getFullYear();
+      const start = startOfXeonicYear(year);
+      let dayOfYear = Math.floor((realDate - start) / 86400000) + 1;
+
+      let xeonYear = year - EPOCH_OFFSET;
+      if (dayOfYear <= 0) {
+        xeonYear -= 1;
+        const prevStart = startOfXeonicYear(year - 1);
+        dayOfYear = Math.floor((realDate - prevStart) / 86400000) + 1;
+      }
+
+      if (dayOfYear > 360) {
+        const idx = dayOfYear - 361;
+        return {
+          year: xeonYear,
+          month: "Abaiah",
+          day: abaiahDays[idx] || "Unknown",
+          season: "Festival"
+        };
+      }
+
+      const mIdx = Math.floor((dayOfYear - 1) / 30);
+      const dMonth = ((dayOfYear - 1) % 30) + 1;
+      const wIdx = Math.floor((dMonth - 1) / 6);
+      const dWeek = (dMonth - 1) % 6;
+
+      return {
+        year: xeonYear,
+        month: xeonMonths[mIdx],
+        day: dMonth,
+        week: xeonWeeks[wIdx],
+        weekday: xeonDays[dWeek],
+        season: seasons[Math.floor(mIdx / 3)]
+      };
+    }
+
+    function fmtReal(d) {
+      return d.toLocaleString(undefined, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const x = toXeonic(now);
+
+      document.getElementById("realTime").textContent =
+        `Real Time: ${fmtReal(now)}`;
+
+      if (x.month === "Abaiah") {
+        document.getElementById("xeonTime").textContent =
+          `${x.day} of Abaiah — Year ${x.year}`;
+      } else {
+        document.getElementById("xeonTime").textContent =
+          `${x.day} ${x.week}, ${x.month} — Year ${x.year}`;
+      }
+
+      document.getElementById("xeonSeason").textContent =
+        `${x.weekday ? x.weekday + " · " : ""}${x.season}`;
+    }
+
+    // initial + every second
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
