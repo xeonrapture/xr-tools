@@ -69,7 +69,7 @@
 
   <main class="wrap">
     <h1>Belief Roller (d8)</h1>
-    <p class="muted">Roll Nd8. Outputs: <b>Belief</b> (with Doubt subtracted) and <b>BP</b> (same, but Doubt does not subtract).</p>
+    <p class="muted">Roll Nd8. Outputs: <b>Belief</b> (with Doubt subtracted) and <b>XP</b> (same, but Doubt does not subtract).</p>
 
     <div class="card">
       <div class="row">
@@ -83,8 +83,8 @@
       </div>
 
       <div class="row">
-        <label for="bp">BP Output</label>
-        <input id="bp" class="mono" type="text" readonly value="—" />
+        <label for="xp">XP Output</label>
+        <input id="xp" class="mono" type="text" readonly value="—" />
       </div>
 
       <div class="actions">
@@ -99,7 +99,7 @@
             <th>Roll</th>
             <th>Meaning</th>
             <th>Belief</th>
-            <th>BP</th>
+            <th>XP</th>
             <th>Count</th>
           </tr>
         </thead>
@@ -157,8 +157,8 @@
       return 2; // 8
     }
 
-    // BP ignores Doubt subtraction (Doubt contributes 0)
-    function bpDelta(r) {
+    // XP ignores Doubt subtraction (Doubt contributes 0)
+    function xpDelta(r) {
       if (r === 1) return 0;
       if (r >= 2 && r <= 5) return 0;
       if (r === 6 || r === 7) return 1;
@@ -170,7 +170,7 @@
       if (!Number.isFinite(n) || n < 1) throw new Error("Dice must be 1 or more.");
 
       let belief = 0;
-      let bp = 0;
+      let xp = 0;
 
       let c1 = 0, c25 = 0, c67 = 0, c8 = 0;
       const rolls = [];
@@ -180,7 +180,7 @@
         rolls.push(r);
 
         belief += beliefDelta(r);
-        bp += bpDelta(r);
+        xp += xpDelta(r);
 
         if (r === 1) c1++;
         else if (r >= 2 && r <= 5) c25++;
@@ -188,7 +188,7 @@
         else c8++;
       }
 
-      return { n, belief, bp, c1, c25, c67, c8, rolls };
+      return { n, belief, xp, c1, c25, c67, c8, rolls };
     }
 
     function renderCounts(c1, c25, c67, c8) {
@@ -200,21 +200,21 @@
 
     function renderSingle(res) {
       el("belief").value = String(res.belief);
-      el("bp").value = String(res.bp);
+      el("xp").value = String(res.xp);
       renderCounts(res.c1, res.c25, res.c67, res.c8);
       el("rollList").textContent = res.rolls.join(", ");
     }
 
-    function renderAverage(n, trials, avgBelief, avgBP, avgC1, avgC25, avgC67, avgC8) {
+    function renderAverage(n, trials, avgBelief, avgXP, avgC1, avgC25, avgC67, avgC8) {
       el("belief").value = avgBelief.toFixed(2);
-      el("bp").value = avgBP.toFixed(2);
+      el("xp").value = avgXP.toFixed(2);
       renderCounts(avgC1.toFixed(2), avgC25.toFixed(2), avgC67.toFixed(2), avgC8.toFixed(2));
       el("rollList").textContent = `Averaged over ${trials} trials (no single roll list).`;
     }
 
     function clearAll() {
       el("belief").value = "—";
-      el("bp").value = "—";
+      el("xp").value = "—";
       renderCounts("0","0","0","0");
       el("rollList").textContent = "—";
     }
@@ -225,7 +225,7 @@
         renderSingle(res);
       } catch (e) {
         el("belief").value = "ERR";
-        el("bp").value = "ERR";
+        el("xp").value = "ERR";
         el("rollList").textContent = `Error: ${e.message || String(e)}`;
       }
     });
@@ -236,25 +236,25 @@
         if (!Number.isFinite(n) || n < 1) throw new Error("Dice must be 1 or more.");
 
         const trials = 10;
-        let sumBelief = 0, sumBP = 0;
+        let sumBelief = 0, sumXP = 0;
         let s1 = 0, s25 = 0, s67 = 0, s8 = 0;
 
         for (let i = 0; i < trials; i++) {
           const r = rollOnce(n);
           sumBelief += r.belief;
-          sumBP += r.bp;
+          sumXP += r.xp;
           s1 += r.c1; s25 += r.c25; s67 += r.c67; s8 += r.c8;
         }
 
         renderAverage(
           n, trials,
           sumBelief / trials,
-          sumBP / trials,
+          sumXP / trials,
           s1 / trials, s25 / trials, s67 / trials, s8 / trials
         );
       } catch (e) {
         el("belief").value = "ERR";
-        el("bp").value = "ERR";
+        el("xp").value = "ERR";
         el("rollList").textContent = `Error: ${e.message || String(e)}`;
       }
     });
