@@ -8,34 +8,26 @@
   <link rel="stylesheet" href="https://xeonrapture.github.io/site.css">
 
   <style>
-    .wrap {
-      max-width: 760px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
-
+    .wrap { max-width: 760px; margin: 2rem auto; padding: 1rem; }
     .card {
       border: 1px solid var(--border, #333);
       border-radius: 12px;
       background: var(--panel, #161821);
       padding: 1rem;
     }
-
     .row {
       display: grid;
-      grid-template-columns: 160px 1fr;
+      grid-template-columns: 180px 1fr;
       gap: 0.75rem;
       align-items: center;
       margin: 0.5rem 0;
     }
-
     .actions {
       display: flex;
       gap: 0.5rem;
       flex-wrap: wrap;
       margin-top: 0.75rem;
     }
-
     button {
       padding: 0.45rem 0.75rem;
       border-radius: 10px;
@@ -45,15 +37,6 @@
       cursor: pointer;
     }
     button:hover { border-color: var(--accent, #7aa2ff); }
-
-    .out {
-      margin-top: 1rem;
-      background: #0f0f0f;
-      border: 1px solid var(--border, #333);
-      border-radius: 12px;
-      padding: 1rem;
-      white-space: pre-wrap;
-    }
 
     table {
       width: 100%;
@@ -70,6 +53,8 @@
     th { opacity: 0.85; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
     .muted { opacity: 0.75; }
+
+    .bad { color: #ff6b6b; }
   </style>
 </head>
 
@@ -84,7 +69,7 @@
 
   <main class="wrap">
     <h1>Belief Roller (d8)</h1>
-    <p class="muted">Enter a dice count, roll that many d8, and get the resulting Belief plus bucket counts.</p>
+    <p class="muted">Roll Nd8. Outputs: <b>Belief</b> (with Doubt subtracted) and <b>BP</b> (same, but Doubt does not subtract).</p>
 
     <div class="card">
       <div class="row">
@@ -92,14 +77,20 @@
         <input id="dice" type="number" min="1" step="1" value="10" />
       </div>
 
-      <div class="actions">
-        <button id="rollBtn">Roll</button>
-        <button id="roll10Btn">Roll ×10</button>
-        <button id="clearBtn">Clear</button>
+      <div class="row">
+        <label for="belief">Resulting Belief</label>
+        <input id="belief" class="mono" type="text" readonly value="—" />
       </div>
 
-      <div class="out" id="output">
-        Ready.
+      <div class="row">
+        <label for="bp">BP Output</label>
+        <input id="bp" class="mono" type="text" readonly value="—" />
+      </div>
+
+      <div class="actions">
+        <button id="rollBtn">Roll</button>
+        <button id="roll10Btn">Roll ×10 (avg)</button>
+        <button id="clearBtn">Clear</button>
       </div>
 
       <table>
@@ -107,7 +98,8 @@
           <tr>
             <th>Roll</th>
             <th>Meaning</th>
-            <th>Belief per die</th>
+            <th>Belief</th>
+            <th>BP</th>
             <th>Count</th>
           </tr>
         </thead>
@@ -115,12 +107,14 @@
           <tr>
             <td class="mono">1</td>
             <td>Doubt</td>
-            <td class="mono">-1</td>
+            <td class="mono bad">-1</td>
+            <td class="mono">0</td>
             <td class="mono" id="c1">0</td>
           </tr>
           <tr>
             <td class="mono">2–5</td>
             <td>Expectation</td>
+            <td class="mono">0</td>
             <td class="mono">0</td>
             <td class="mono" id="c25">0</td>
           </tr>
@@ -128,11 +122,13 @@
             <td class="mono">6–7</td>
             <td>Hope</td>
             <td class="mono">+1</td>
+            <td class="mono">+1</td>
             <td class="mono" id="c67">0</td>
           </tr>
           <tr>
             <td class="mono">8</td>
             <td>Faith</td>
+            <td class="mono">+2</td>
             <td class="mono">+2</td>
             <td class="mono" id="c8">0</td>
           </tr>
@@ -141,7 +137,7 @@
 
       <details style="margin-top:0.75rem;">
         <summary>Show individual rolls</summary>
-        <div class="out mono" id="rollList">—</div>
+        <div class="mono muted" id="rollList" style="margin-top:0.5rem;">—</div>
       </details>
     </div>
   </main>
@@ -153,23 +149,20 @@
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    function scoreRoll(r) {
-      // Buckets:
-      // 1 -> -1
-      // 2-5 -> 0
-      // 6-7 -> +1
-      // 8 -> +2
+    // Belief includes Doubt subtraction
+    function beliefDelta(r) {
       if (r === 1) return -1;
       if (r >= 2 && r <= 5) return 0;
       if (r === 6 || r === 7) return 1;
-      return 2; // r === 8
+      return 2; // 8
     }
 
-    function bucketFor(r) {
-      if (r === 1) return "1";
-      if (r >= 2 && r <= 5) return "25";
-      if (r === 6 || r === 7) return "67";
-      return "8";
+    // BP ignores Doubt subtraction (Doubt contributes 0)
+    function bpDelta(r) {
+      if (r === 1) return 0;
+      if (r >= 2 && r <= 5) return 0;
+      if (r === 6 || r === 7) return 1;
+      return 2; // 8
     }
 
     function rollOnce(n) {
@@ -177,6 +170,8 @@
       if (!Number.isFinite(n) || n < 1) throw new Error("Dice must be 1 or more.");
 
       let belief = 0;
+      let bp = 0;
+
       let c1 = 0, c25 = 0, c67 = 0, c8 = 0;
       const rolls = [];
 
@@ -184,51 +179,54 @@
         const r = randInt(1, 8);
         rolls.push(r);
 
-        belief += scoreRoll(r);
+        belief += beliefDelta(r);
+        bp += bpDelta(r);
 
-        const b = bucketFor(r);
-        if (b === "1") c1++;
-        else if (b === "25") c25++;
-        else if (b === "67") c67++;
+        if (r === 1) c1++;
+        else if (r >= 2 && r <= 5) c25++;
+        else if (r === 6 || r === 7) c67++;
         else c8++;
       }
 
-      return { n, belief, c1, c25, c67, c8, rolls };
+      return { n, belief, bp, c1, c25, c67, c8, rolls };
     }
 
-    function renderResult(res) {
-      el("c1").textContent = res.c1;
-      el("c25").textContent = res.c25;
-      el("c67").textContent = res.c67;
-      el("c8").textContent = res.c8;
+    function renderCounts(c1, c25, c67, c8) {
+      el("c1").textContent = c1;
+      el("c25").textContent = c25;
+      el("c67").textContent = c67;
+      el("c8").textContent = c8;
+    }
 
-      el("output").textContent =
-        `Dice: ${res.n}d8\n` +
-        `Resulting Belief: ${res.belief}\n\n` +
-        `Buckets:\n` +
-        `  Doubt (1): ${res.c1}\n` +
-        `  Expectation (2–5): ${res.c25}\n` +
-        `  Hope (6–7): ${res.c67}\n` +
-        `  Faith (8): ${res.c8}`;
-
+    function renderSingle(res) {
+      el("belief").value = String(res.belief);
+      el("bp").value = String(res.bp);
+      renderCounts(res.c1, res.c25, res.c67, res.c8);
       el("rollList").textContent = res.rolls.join(", ");
     }
 
+    function renderAverage(n, trials, avgBelief, avgBP, avgC1, avgC25, avgC67, avgC8) {
+      el("belief").value = avgBelief.toFixed(2);
+      el("bp").value = avgBP.toFixed(2);
+      renderCounts(avgC1.toFixed(2), avgC25.toFixed(2), avgC67.toFixed(2), avgC8.toFixed(2));
+      el("rollList").textContent = `Averaged over ${trials} trials (no single roll list).`;
+    }
+
     function clearAll() {
-      el("output").textContent = "Ready.";
+      el("belief").value = "—";
+      el("bp").value = "—";
+      renderCounts("0","0","0","0");
       el("rollList").textContent = "—";
-      el("c1").textContent = "0";
-      el("c25").textContent = "0";
-      el("c67").textContent = "0";
-      el("c8").textContent = "0";
     }
 
     el("rollBtn").addEventListener("click", () => {
       try {
         const res = rollOnce(el("dice").value);
-        renderResult(res);
+        renderSingle(res);
       } catch (e) {
-        el("output").textContent = `Error: ${e.message || String(e)}`;
+        el("belief").value = "ERR";
+        el("bp").value = "ERR";
+        el("rollList").textContent = `Error: ${e.message || String(e)}`;
       }
     });
 
@@ -237,52 +235,32 @@
         const n = Number(el("dice").value);
         if (!Number.isFinite(n) || n < 1) throw new Error("Dice must be 1 or more.");
 
-        // Run 10 trials, show average belief + average bucket counts
-        let sumBelief = 0;
+        const trials = 10;
+        let sumBelief = 0, sumBP = 0;
         let s1 = 0, s25 = 0, s67 = 0, s8 = 0;
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < trials; i++) {
           const r = rollOnce(n);
           sumBelief += r.belief;
+          sumBP += r.bp;
           s1 += r.c1; s25 += r.c25; s67 += r.c67; s8 += r.c8;
         }
 
-        const avg = {
-          n,
-          belief: sumBelief / 10,
-          c1: (s1 / 10).toFixed(2),
-          c25: (s25 / 10).toFixed(2),
-          c67: (s67 / 10).toFixed(2),
-          c8: (s8 / 10).toFixed(2),
-          rolls: []
-        };
-
-        // Put averages into the table + summary
-        el("c1").textContent = avg.c1;
-        el("c25").textContent = avg.c25;
-        el("c67").textContent = avg.c67;
-        el("c8").textContent = avg.c8;
-
-        el("output").textContent =
-          `Dice: ${n}d8\n` +
-          `Trials: 10\n` +
-          `Average Belief: ${avg.belief.toFixed(2)}\n\n` +
-          `Average Buckets per roll:\n` +
-          `  Doubt (1): ${avg.c1}\n` +
-          `  Expectation (2–5): ${avg.c25}\n` +
-          `  Hope (6–7): ${avg.c67}\n` +
-          `  Faith (8): ${avg.c8}\n\n` +
-          `(Use "Roll" for a single concrete roll list.)`;
-
-        el("rollList").textContent = "—";
+        renderAverage(
+          n, trials,
+          sumBelief / trials,
+          sumBP / trials,
+          s1 / trials, s25 / trials, s67 / trials, s8 / trials
+        );
       } catch (e) {
-        el("output").textContent = `Error: ${e.message || String(e)}`;
+        el("belief").value = "ERR";
+        el("bp").value = "ERR";
+        el("rollList").textContent = `Error: ${e.message || String(e)}`;
       }
     });
 
     el("clearBtn").addEventListener("click", clearAll);
 
-    // Enter key rolls
     el("dice").addEventListener("keydown", (e) => {
       if (e.key === "Enter") el("rollBtn").click();
     });
