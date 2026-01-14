@@ -61,11 +61,25 @@
 <body>
   <div id="nav"></div>
   <script>
-    fetch("https://xeonrapture.github.io/nav.html")
-      .then(r => r.text())
-      .then(html => document.getElementById("nav").innerHTML = html)
-      .catch(() => {});
+  fetch("https://xeonrapture.github.io/nav.html")
+    .then(r => r.text())
+    .then(html => {
+      const host = document.getElementById("nav");
+      host.innerHTML = html;
+  
+      // hook up dropdown toggle
+      const nav = host.querySelector(".xr-nav");
+      const btn = host.querySelector(".xr-nav-toggle");
+      if (nav && btn) {
+        btn.addEventListener("click", () => {
+          const open = nav.classList.toggle("xr-open");
+          btn.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+      }
+    })
+    .catch(console.error);
   </script>
+
 
   <main class="wrap">
     <h1>Belief Roller (d8)</h1>
