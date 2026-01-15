@@ -103,7 +103,6 @@
 
       <div class="actions">
         <button id="rollBtn">Roll</button>
-        <button id="roll10Btn">Roll ×10 (avg)</button>
         <button id="clearBtn">Clear</button>
       </div>
 
@@ -255,35 +254,6 @@
       try {
         const res = rollOnce(el("dice").value);
         renderSingle(res);
-      } catch (e) {
-        el("belief").value = "ERR";
-        el("xp").value = "ERR";
-        el("rollList").textContent = `Error: ${e.message || String(e)}`;
-      }
-    });
-
-    el("roll10Btn").addEventListener("click", () => {
-      try {
-        const n = Number(el("dice").value);
-        if (!Number.isFinite(n) || n < 1) throw new Error("Dice must be 1 or more.");
-
-        const trials = 10;
-        let sumBelief = 0, sumXP = 0;
-        let s1 = 0, s25 = 0, s67 = 0, s8 = 0;
-
-        for (let i = 0; i < trials; i++) {
-          const r = rollOnce(n);
-          sumBelief += r.belief;
-          sumXP += r.xp;
-          s1 += r.c1; s25 += r.c25; s67 += r.c67; s8 += r.c8;
-        }
-
-        renderAverage(
-          n, trials,
-          sumBelief / trials,
-          sumXP / trials,
-          s1 / trials, s25 / trials, s67 / trials, s8 / trials
-        );
       } catch (e) {
         el("belief").value = "ERR";
         el("xp").value = "ERR";
