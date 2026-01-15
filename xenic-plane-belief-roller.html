@@ -56,7 +56,9 @@
       width: 100%;
       overflow: visible;
     }
-
+    .col-meaning {
+      min-width: 110px;
+    }
     th, td {
       border-bottom: 1px solid var(--border, #333);
       padding: 0.5rem 0.6rem;
@@ -87,7 +89,9 @@
         font-size: 0.85rem;
         min-width: 0;
       }
-    
+      .col-meaning {
+        min-width: 90px;
+      }
       th, td {
         padding: 0.35rem 0.4rem;
       }
@@ -148,7 +152,7 @@
           <thead>
             <tr>
               <th>Roll</th>
-              <th>Meaning</th>
+              <th class="col-meaning">Meaning</th>
               <th>Belief</th>
               <th>Count</th>
               <th>Results</th>
@@ -157,28 +161,28 @@
           <tbody>
             <tr>
               <td class="mono">1</td>
-              <td>Doubt</td>
+              <td class="col-meaning">Doubt</td>
               <td class="mono bad">-1</td>
               <td class="mono" id="c1">0</td>
               <td class="mono" id="resc1">0</td>
             </tr>
             <tr>
               <td class="mono">2–5</td>
-              <td>Expectation</td>
+              <td class="col-meaning">Expectation</td>
               <td class="mono">0</td>
               <td class="mono" id="c25">0</td>
               <td class="mono" id="resc25">0</td>
             </tr>
             <tr>
               <td class="mono">6–7</td>
-              <td>Hope</td>
+              <td class="col-meaning">Hope</td>
               <td class="mono">+1</td>
               <td class="mono" id="c67">0</td>
               <td class="mono" id="resc67">0</td>
             </tr>
             <tr>
               <td class="mono">8</td>
-              <td>Confidence</td>
+              <td class="col-meaning">Confidence</td>
               <td class="mono">+2</td>
               <td class="mono" id="c8">0</td>
               <td class="mono" id="resc8">0</td>
