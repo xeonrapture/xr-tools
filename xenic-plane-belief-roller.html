@@ -20,7 +20,7 @@
       grid-template-columns: 180px 1fr;
       gap: 0.75rem;
       align-items: center;
-      margin: 0.5rem 0;
+      margin: 0.25rem 0;
     }
     .actions {
       display: flex;
@@ -113,8 +113,8 @@
             <th>Roll</th>
             <th>Meaning</th>
             <th>Belief</th>
-            <th>Experience</th>
             <th>Count</th>
+            <th>Results</th>
           </tr>
         </thead>
         <tbody>
@@ -122,29 +122,29 @@
             <td class="mono">1</td>
             <td>Doubt</td>
             <td class="mono bad">-1</td>
-            <td class="mono">0</td>
             <td class="mono" id="c1">0</td>
+            <td class="mono" id="resc1">0</td>
           </tr>
           <tr>
             <td class="mono">2–5</td>
             <td>Expectation</td>
             <td class="mono">0</td>
-            <td class="mono">0</td>
             <td class="mono" id="c25">0</td>
+            <td class="mono" id="resc25">0</td>
           </tr>
           <tr>
             <td class="mono">6–7</td>
             <td>Hope</td>
             <td class="mono">+1</td>
-            <td class="mono">+1</td>
             <td class="mono" id="c67">0</td>
+            <td class="mono" id="resc67">0</td>
           </tr>
           <tr>
             <td class="mono">8</td>
             <td>Confidence</td>
             <td class="mono">+2</td>
-            <td class="mono">+2</td>
             <td class="mono" id="c8">0</td>
+            <td class="mono" id="resc8">0</td>
           </tr>
         </tbody>
       </table>
@@ -212,17 +212,34 @@
       el("c8").textContent = c8;
     }
 
+    function renderResults(resc1, resc25, resc67, resc8) {
+      el("resc1").textContent = resc1;
+      el("resc25").textContent = resc25;
+      el("resc67").textContent = resc67;
+      el("resc8").textContent = resc8;
+    }
+
     function renderSingle(res) {
       el("belief").value = String(res.belief);
       el("xp").value = String(res.xp);
+      resc1 = "-" + res.c1
+      resc25 = res.c25 * 0
+      resc67 = "+" + res.c67
+      resc8 = "+" + (res.c8 * 2)
       renderCounts(res.c1, res.c25, res.c67, res.c8);
+      renderResults(resc1, resc25, resc67, resc8);
       el("rollList").textContent = res.rolls.join(", ");
     }
 
     function renderAverage(n, trials, avgBelief, avgXP, avgC1, avgC25, avgC67, avgC8) {
       el("belief").value = avgBelief.toFixed(2);
       el("xp").value = avgXP.toFixed(2);
+      resc1 = "-" + res.avgC1
+      resc25 = res.avgC25 * 0
+      resc67 = "+" + res.avgC67
+      resc8 = "+" + (res.avgC8 * 2)
       renderCounts(avgC1.toFixed(2), avgC25.toFixed(2), avgC67.toFixed(2), avgC8.toFixed(2));
+      renderResults(resc1, resc25, resc67, resc8);
       el("rollList").textContent = `Averaged over ${trials} trials (no single roll list).`;
     }
 
@@ -230,6 +247,7 @@
       el("belief").value = "—";
       el("xp").value = "—";
       renderCounts("0","0","0","0");
+      renderResults("0","0","0","0");
       el("rollList").textContent = "—";
     }
 
